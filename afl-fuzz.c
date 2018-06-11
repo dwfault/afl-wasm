@@ -322,6 +322,18 @@ enum {
 };
 
 
+
+/*
+var wasmModule = new WebAssembly.Module(new Uint8Array(['0x0', '0x61', '0x73', '0x6d', '0x1', '0x0', '0x0', '0x0', '0x1', '0x85', '0x80', '0x80', '0x80', '0x00', '0x01', '0x60', '0x00', '0x1', '0x7f', '0x03', '0x82', '0x80', '0x80', '0x80', '0x00', '0x01', '0x0', '0x4', '0x84', '0x80', '0x80', '0x80', '0x0', '0x1', '0x70', '0x00', '0x00', '0x5', '0x83', '0x80', '0x80', '0x80', '0x00', '0x1', '0x0', '0x1', '0x6', '0x81', '0x80', '0x80', '0x80', '0x00', '0x0', '0x7', '0x91', '0x80', '0x80', '0x80', '0x00', '0x02','0x06', '0x6d', '0x65', '0x6d', '0x6f', '0x72', '0x79', '0x02', '0x0', '0x4', '0x6d', '0x61', '0x69', '0x6e', '0x0', '0x0', '0xa', '0x8a', '0x80', '0x80', '0x80', '0x00', '0x01', '0x84', '0x80', '0x80', '0x80', '0x00', '0x00', '0x41', '0x2a', '0xb']));
+var wasmInstance =  new WebAssembly.Instance(wasmModule);
+print(wasmInstance.exports.main());
+*/
+char WebAssemblyLoadPrefix [] = "var wasmModule = new WebAssembly.Module(new Uint8Array([";
+
+char WebAssemblyLoadPostfix [] = "]));                      \n\
+var wasmInstance = new WebAssembly.Instance(wasmModule);   \n\
+print(wasmInstance.exports.main());";
+
 /* Get unix time in milliseconds */
 
 static u64 get_cur_time(void) {
@@ -2467,6 +2479,33 @@ static u8 run_target(char** argv, u32 timeout) {
 
 static void write_to_testcase(void* mem, u32 len) {
 
+  char formatS[10] = "'0x%2x', ";
+  char formatBuffer[sizeof(formatS)] = {
+      0,
+  };
+
+  u32 JavaScriptWebAssemblyLen = strlen(WebAssemblyLoadPrefix) + len * sizeof(formatBuffer) + strlen(WebAssemblyLoadPostfix);
+
+  char *JavaScriptWebAssembly = (char *)malloc(JavaScriptWebAssemblyLen);
+  u32 currentP = 0;
+  currentP += strcpy(JavaScriptWebAssembly, WebAssemblyLoadPrefix);
+
+  for (int i = 0; i < len; i++)
+  {
+    fprintf(formatBuffer, formatS, (char *)mem + i);
+    currentP += strcpy(((char *)JavaScriptWebAssembly + currentP), formatBuffer);
+  }
+
+  currentP += strcpy(((char *)JavaScriptWebAssembly + currentP), WebAssemblyLoadPostfix);
+
+  for (int i = 0; i < JavaScriptWebAssemblyLen; i++)
+  {
+    printf("%c", JavaScriptWebAssembly[i]);
+  }
+  printf("\n");
+  getchar();
+
+  
   s32 fd = out_fd;
 
   if (out_file) {
@@ -2488,6 +2527,7 @@ static void write_to_testcase(void* mem, u32 len) {
 
   } else close(fd);
 
+  free(JavaScriptWebAssembly);
 }
 
 
@@ -5276,7 +5316,7 @@ static u8 fuzz_one(char** argv) {
     eff_cnt++;
   }
 
-  /* Walking byte. */
+  /* Walking byte. *****************************************************************************************************************************************************/
 
   stage_name  = "bitflip 8/8";
   stage_short = "flip8";
@@ -5344,7 +5384,7 @@ static u8 fuzz_one(char** argv) {
   stage_finds[STAGE_FLIP8]  += new_hit_cnt - orig_hit_cnt;
   stage_cycles[STAGE_FLIP8] += stage_max;
 
-  /* Two walking bytes. */
+  /* Two walking bytes. *******************************************************************************************************************************/
 
   if (len < 2) goto skip_bitflip;
 
@@ -5383,7 +5423,7 @@ static u8 fuzz_one(char** argv) {
 
   if (len < 4) goto skip_bitflip;
 
-  /* Four walking bytes. */
+  /* Four walking bytes. ***************************************************************************************************************************/
 
   stage_name  = "bitflip 32/8";
   stage_short = "flip32";

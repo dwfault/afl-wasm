@@ -2493,7 +2493,7 @@ static void write_to_testcase(void* mem, u32 len) {
 
   for (int i = 0; i < len; i++)
   {
-    fprintf(formatBuffer, formatS, (char *)mem + i);
+    sprintf(formatBuffer, formatS, (char *)mem + i);
     strcpy(((char *)JavaScriptWebAssembly + currentP), formatBuffer);
     currentP += sizeof(formatBuffer);
   }

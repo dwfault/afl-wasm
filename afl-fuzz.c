@@ -2531,6 +2531,7 @@ static void write_to_testcase(void* mem, u32 len) {
   } else close(fd);
 
   free(JavaScriptWebAssembly);
+  JavaScriptWebAssembly = NULL;
 }
 
 

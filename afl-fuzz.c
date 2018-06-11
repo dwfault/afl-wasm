@@ -2480,7 +2480,7 @@ static u8 run_target(char** argv, u32 timeout) {
 static void write_to_testcase(void* mem, u32 len) {
 
   char formatS[10] = "'0x%2x', ";
-  char formatBuffer[sizeof(formatS)+1] = {
+  char formatBuffer[10] = {
       0,
   };
 

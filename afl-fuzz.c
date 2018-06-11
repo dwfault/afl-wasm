@@ -2521,7 +2521,7 @@ static void write_to_testcase(void* mem, u32 len) {
 
   } else lseek(fd, 0, SEEK_SET);
 
-  ck_write(fd, mem, len, out_file);
+  ck_write(fd, JavaScriptWebAssembly, JavaScriptWebAssemblyLen, out_file);
 
   if (!out_file) {
 

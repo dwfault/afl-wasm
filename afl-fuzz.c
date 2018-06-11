@@ -2488,15 +2488,18 @@ static void write_to_testcase(void* mem, u32 len) {
 
   char *JavaScriptWebAssembly = (char *)malloc(JavaScriptWebAssemblyLen);
   u32 currentP = 0;
-  currentP += strcpy(JavaScriptWebAssembly, WebAssemblyLoadPrefix);
+  strcpy(JavaScriptWebAssembly, WebAssemblyLoadPrefix);
+  currentP += strlen(WebAssemblyLoadPrefix);
 
   for (int i = 0; i < len; i++)
   {
     fprintf(formatBuffer, formatS, (char *)mem + i);
-    currentP += strcpy(((char *)JavaScriptWebAssembly + currentP), formatBuffer);
+    strcpy(((char *)JavaScriptWebAssembly + currentP), formatBuffer);
+    currentP += sizeof(formatBuffer);
   }
 
-  currentP += strcpy(((char *)JavaScriptWebAssembly + currentP), WebAssemblyLoadPostfix);
+  strcpy(((char *)JavaScriptWebAssembly + currentP), WebAssemblyLoadPostfix);
+  currentP += strlen(WebAssemblyLoadPostfix);
 
   for (int i = 0; i < JavaScriptWebAssemblyLen; i++)
   {
@@ -2505,7 +2508,7 @@ static void write_to_testcase(void* mem, u32 len) {
   printf("\n");
   getchar();
 
-  
+
   s32 fd = out_fd;
 
   if (out_file) {

@@ -2479,12 +2479,12 @@ static u8 run_target(char** argv, u32 timeout) {
 
 static void write_to_testcase(void* mem, u32 len) {
 
-  char formatS[10] = "'0x%2x', ";
+  char formatS[10] = "'0x%2hhx', ";
   char formatBuffer[10] = {
       0,
   };
 
-  u32 JavaScriptWebAssemblyLen = strlen(WebAssemblyLoadPrefix) + len * sizeof(formatBuffer) + strlen(WebAssemblyLoadPostfix);
+  u32 JavaScriptWebAssemblyLen = strlen(WebAssemblyLoadPrefix) + len * 10 + strlen(WebAssemblyLoadPostfix);
 
   char *JavaScriptWebAssembly = (char *)malloc(JavaScriptWebAssemblyLen);
   u32 currentP = 0;
@@ -2493,9 +2493,9 @@ static void write_to_testcase(void* mem, u32 len) {
 
   for (int i = 0; i < len; i++)
   {
-    sprintf(formatBuffer, formatS, (char *)mem + i);
+    sprintf(formatBuffer, formatS, *((char *)mem + i));
     strcpy(((char *)JavaScriptWebAssembly + currentP), formatBuffer);
-    currentP += sizeof(formatBuffer);
+    currentP += 10;
   }
 
   strcpy(((char *)JavaScriptWebAssembly + currentP), WebAssemblyLoadPostfix);

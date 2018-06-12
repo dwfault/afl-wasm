@@ -330,9 +330,9 @@ char WebAssemblyLoadPrefix[] = "var wasmModule = new WebAssembly.Module(new Uint
 
 char WebAssemblyLoadPostfix[] = "]));                      \n\
 var wasmInstance = new WebAssembly.Instance(wasmModule);   \n\
-print(wasmInstance.exports.main());";
+print(wasmInstance.exports.main());\n";
 
-
+u32 printFlag = 0;
 
 /* Get unix time in milliseconds */
 
@@ -2490,9 +2490,42 @@ static void write_to_testcase(void* mem, u32 len) {
     if (fd < 0) PFATAL("Unable to create '%s'", out_file);
 
   } else lseek(fd, 0, SEEK_SET);
+  //
+  char formatS[13] = "'0x%02hhx', ";
+  char formatBuffer[10] = {
+    0,
+  };
 
-  ck_write(fd, mem, len, out_file);
+  u32 JavaScriptWebAssemblyLen = strlen(WebAssemblyLoadPrefix) + len * 10 + strlen(WebAssemblyLoadPostfix);
 
+  char *JavaScriptWebAssembly = (char *)malloc(JavaScriptWebAssemblyLen);
+  memset(JavaScriptWebAssembly, 0, JavaScriptWebAssemblyLen);
+  u32 currentP = 0;
+  strcpy(JavaScriptWebAssembly, WebAssemblyLoadPrefix);
+  currentP += strlen(WebAssemblyLoadPrefix);
+  
+  for (int i = 0; i < len; i++){
+    sprintf(formatBuffer, formatS, *((char *)mem + i));
+    strcpy(((char *)JavaScriptWebAssembly + currentP), formatBuffer);
+    currentP += 8;
+  }
+
+  strcpy(((char *)JavaScriptWebAssembly + currentP), WebAssemblyLoadPostfix);
+  currentP += strlen(WebAssemblyLoadPostfix);
+  JavaScriptWebAssembly[strlen(JavaScriptWebAssembly)] = 0; 
+ 
+  if(printFlag == 1){
+    SAYF(cGRA "\n\n[GENERATED SAMPLE]\
+                   \n%s\n" cRST, JavaScriptWebAssembly);
+    printFlag = 0; 
+    SAYF(TERM_CLEAR CURSOR_HIDE); 
+  }
+  
+  ck_write(fd, JavaScriptWebAssembly, strlen(JavaScriptWebAssembly), out_file);
+  
+  free(JavaScriptWebAssembly);
+  JavaScriptWebAssembly = NULL;
+  //
   if (!out_file) {
 
     if (ftruncate(fd, len)) PFATAL("ftruncate() failed");
@@ -3884,7 +3917,7 @@ static void show_stats(void) {
   static u64 last_stats_ms, last_plot_ms, last_ms, last_execs;
   static double avg_exec;
   double t_byte_ratio, stab_ratio;
-
+  
   u64 cur_ms;
   u32 t_bytes, t_bits;
 
@@ -3982,12 +4015,12 @@ static void show_stats(void) {
 
     SAYF(TERM_CLEAR CURSOR_HIDE);
     clear_screen = 0;
-
     check_term_size();
 
   }
 
   SAYF(TERM_HOME);
+  printFlag = 1;
 
   if (term_too_small) {
 
@@ -4342,7 +4375,7 @@ static void show_stats(void) {
   } else SAYF("\r");
 
   /* Hallelujah! */
-
+  
   fflush(0);
 
 }

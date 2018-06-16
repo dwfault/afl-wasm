@@ -321,16 +321,95 @@ enum {
   /* 05 */ FAULT_NOBITS
 };
 
-/*
-var wasmModule = new WebAssembly.Module(new Uint8Array(['0x0', '0x61', '0x73', '0x6d', '0x1', '0x0', '0x0', '0x0', '0x1', '0x85', '0x80', '0x80', '0x80', '0x00', '0x01', '0x60', '0x00', '0x1', '0x7f', '0x03', '0x82', '0x80', '0x80', '0x80', '0x00', '0x01', '0x0', '0x4', '0x84', '0x80', '0x80', '0x80', '0x0', '0x1', '0x70', '0x00', '0x00', '0x5', '0x83', '0x80', '0x80', '0x80', '0x00', '0x1', '0x0', '0x1', '0x6', '0x81', '0x80', '0x80', '0x80', '0x00', '0x0', '0x7', '0x91', '0x80', '0x80', '0x80', '0x00', '0x02','0x06', '0x6d', '0x65', '0x6d', '0x6f', '0x72', '0x79', '0x02', '0x0', '0x4', '0x6d', '0x61', '0x69', '0x6e', '0x0', '0x0', '0xa', '0x8a', '0x80', '0x80', '0x80', '0x00', '0x01', '0x84', '0x80', '0x80', '0x80', '0x00', '0x00', '0x41', '0x2a', '0xb']));
-var wasmInstance =  new WebAssembly.Instance(wasmModule);
-print(wasmInstance.exports.main());
-*/
-char WebAssemblyLoadPrefix[] = "var wasmModule = new WebAssembly.Module(new Uint8Array([";
+char WebAssemblyLoadPrefix[] = 
+"var importObject = {\n\
+    env: {\n\
+        print_number: function (number) {\n\
+            print(\'[+] importObject callback.\');\n\
+            print(number);\n\
+        }\n\
+    }\n\
+};\n\
+var wasmCode = new Uint8Array([";
 
-char WebAssemblyLoadPostfix[] = "]));                      \n\
-var wasmInstance = new WebAssembly.Instance(wasmModule);   \n\
-print(wasmInstance.exports.main());\n";
+char WebAssemblyLoadPostfix[] = "]);\n\
+///////////////////////////////////////////////////////////////////////////INIT\n\
+try {\n\
+    var wasmModule = new WebAssembly.Module(wasmCode);\n\
+    var wasmInstance = new WebAssembly.Instance(wasmModule, importObject);\n\
+    print(\'[+] wasmCode validate.\');\n\
+    print(WebAssembly.validate(wasmCode));\n\
+}\n\
+catch (e) { print(e); }\n\
+///////////////////////////////////////////////////////////////////////////EXPORTS\n\
+try {\n\
+    var wasmInstanceExported = wasmInstance.exports;\n\
+    print(\'[+] wasmInstanceExported.\');\n\
+    try {\n\
+        var wasmInstanceExportedTable = wasmInstance.exports.table;\n\
+        for (var i = 0; i < 100; i++) {\n\
+            print(wasmInstanceExportedTable.get(i));\n\
+        }\n\
+    }\n\
+    catch (e) { print(e); }\n\
+    try {\n\
+        print(wasmInstanceExported.main(0));\n\
+    }\n\
+    catch (e) { print(e); }\n\
+    try {\n\
+        for (var i in wasmInstanceExported) {\n\
+            try {\n\
+                print(eval(\'wasmInstanceExported.\' + i + \';\'));\n\
+            }\n\
+            catch (e) { print(e); }\n\
+            try {\n\
+                print(eval(\'wasmInstanceExported.\' + i + \'(0);\'));\n\
+            }\n\
+            catch (e) { print(e); }\n\
+        }\n\
+    }\n\
+    catch (e) { print(e); }\n\
+    \
+    var wasmModuleExports = WebAssembly.Module.exports(wasmModule);\n\
+    var varExports = [];\n\
+    print(\'[+] wasmModuleExported.\')\n\
+    for (var i of wasmModuleExports) {\n\
+        print(i + \' : \' + i.kind + \' : \' + i.name);\n\
+        varExports.push(i.name);\n\
+    }\n\
+    for (var i of varExports) {\n\
+        try {\n\
+            print(eval(\'wasmInstanceExported.\' + i + ';\'));\n\
+        }\n\
+        catch (e) { print(e); }\n\
+        try {\n\
+            print(eval(\'wasmInstanceExported.\' + i + \'(0);\'));\n\
+        }\n\
+        catch (e) { print(e); }\n\
+    }\n\
+}\n\
+catch (e) { print(e) };\n\
+///////////////////////////////////////////////////////////////////////////IMPORTS\n\
+try {\n\
+    var wasmModuleImports = WebAssembly.Module.imports(wasmModule);\n\
+    var varImports = [];\n\
+    print(\'[+] wasmModuleImported.\')\n\
+    for (var i of wasmModuleImports) {\n\
+        print(i + \' : \' + i.kind + \' : \' + i.name + \' : \' + i.module);\n\
+        varImports.push(i.name);\n\
+    }\n\
+}\n\
+catch (e) { print(e) };\n\
+/////////////////////////////////////////////////////////////////////////MEMORY\n\
+try {\n\
+    var wasmMemory = wasmInstance.exports.memory;\n\
+    print(\'[+] wasmMemory.\');\n\
+    print(wasmMemory);\n\
+    print(wasmMemory instanceof WebAssembly.Memory);\n\
+}\n\
+catch (e) { print(e); }\n\
+////////////////////////////////////////////////////////////////////////\n\
+print(\'[+] End.\');\n";
 
 u32 printFlag = 0;
 

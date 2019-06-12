@@ -322,94 +322,125 @@ enum {
 };
 
 char WebAssemblyLoadPrefix[] = 
-"var importObject = {\n\
-    env: {\n\
-        print_number: function (number) {\n\
-            print(\'[+] importObject callback.\');\n\
-            print(number);\n\
-        }\n\
-    }\n\
-};\n\
+"var importObject = {\
+    env: {\
+        i: function (arg1, arg2) {\
+            arg1 -= arg2;\
+            var a = arguments.length;\
+            var b = arguments[2];\
+            var c = b.__proto__.slice([...b]);\
+            print(\'[+] imported function executed.\');\
+        },\
+    }\
+};\
 var wasmCode = new Uint8Array([";
 
-char WebAssemblyLoadPostfix[] = "]);\n\
-///////////////////////////////////////////////////////////////////////////INIT\n\
-try {\n\
-    var wasmModule = new WebAssembly.Module(wasmCode);\n\
-    var wasmInstance = new WebAssembly.Instance(wasmModule, importObject);\n\
-    print(\'[+] wasmCode validate.\');\n\
-    print(WebAssembly.validate(wasmCode));\n\
-}\n\
-catch (e) { print(e); }\n\
-///////////////////////////////////////////////////////////////////////////EXPORTS\n\
-try {\n\
-    var wasmInstanceExported = wasmInstance.exports;\n\
-    print(\'[+] wasmInstanceExported.\');\n\
-    try {\n\
-        var wasmInstanceExportedTable = wasmInstance.exports.table;\n\
-        for (var i = 0; i < 100; i++) {\n\
-            print(wasmInstanceExportedTable.get(i));\n\
-        }\n\
-    }\n\
-    catch (e) { print(e); }\n\
-    try {\n\
-        print(wasmInstanceExported.main(0));\n\
-    }\n\
-    catch (e) { print(e); }\n\
-    try {\n\
-        for (var i in wasmInstanceExported) {\n\
-            try {\n\
-                print(eval(\'wasmInstanceExported.\' + i + \';\'));\n\
-            }\n\
-            catch (e) { print(e); }\n\
-            try {\n\
-                print(eval(\'wasmInstanceExported.\' + i + \'(0);\'));\n\
-            }\n\
-            catch (e) { print(e); }\n\
-        }\n\
-    }\n\
-    catch (e) { print(e); }\n\
-    \
-    var wasmModuleExports = WebAssembly.Module.exports(wasmModule);\n\
-    var varExports = [];\n\
-    print(\'[+] wasmModuleExported.\')\n\
-    for (var i of wasmModuleExports) {\n\
-        print(i + \' : \' + i.kind + \' : \' + i.name);\n\
-        varExports.push(i.name);\n\
-    }\n\
-    for (var i of varExports) {\n\
-        try {\n\
-            print(eval(\'wasmInstanceExported.\' + i + ';\'));\n\
-        }\n\
-        catch (e) { print(e); }\n\
-        try {\n\
-            print(eval(\'wasmInstanceExported.\' + i + \'(0);\'));\n\
-        }\n\
-        catch (e) { print(e); }\n\
-    }\n\
-}\n\
-catch (e) { print(e) };\n\
-///////////////////////////////////////////////////////////////////////////IMPORTS\n\
-try {\n\
-    var wasmModuleImports = WebAssembly.Module.imports(wasmModule);\n\
-    var varImports = [];\n\
-    print(\'[+] wasmModuleImported.\')\n\
-    for (var i of wasmModuleImports) {\n\
-        print(i + \' : \' + i.kind + \' : \' + i.name + \' : \' + i.module);\n\
-        varImports.push(i.name);\n\
-    }\n\
-}\n\
-catch (e) { print(e) };\n\
-/////////////////////////////////////////////////////////////////////////MEMORY\n\
-try {\n\
-    var wasmMemory = wasmInstance.exports.memory;\n\
-    print(\'[+] wasmMemory.\');\n\
-    print(wasmMemory);\n\
-    print(wasmMemory instanceof WebAssembly.Memory);\n\
-}\n\
-catch (e) { print(e); }\n\
-////////////////////////////////////////////////////////////////////////\n\
-print(\'[+] End.\');\n";
+char WebAssemblyLoadPostfix[] = "]);\
+//////////////////////////////////////////////////////////////INIT\
+try {\
+    var wasmModule = new WebAssembly.Module(wasmCode);\
+    var wasmInstance = new WebAssembly.Instance(wasmModule, importObject);\
+\
+    print('[+] wasmCode validate.');\
+    print(WebAssembly.validate(wasmCode));\
+}\
+catch (e) { print(e); }\
+////////////////////////////////////////////////////////////EXPORTS\
+try {\
+    var wasmInstanceExported = wasmInstance.exports;\
+    print('[+] wasmInstanceExported.');\
+    try {\
+        var wasmInstanceExportedTable = wasmInstance.exports.table;\
+        for (var i = 0; i < 100; i++) {\
+            print(wasmInstanceExportedTable.get(i));\
+            var f = wasmInstanceExportedTable.get(i);\
+            try {\
+                var res = f(i);\
+                res = f(5.40900887767170327461014974881E-315);\
+                res = f({});\
+            }\
+            catch (e) { print(e); }\
+        }\
+    }\
+    catch (e) { print(e); }\
+\
+    try {\
+        print(wasmInstanceExported.main(0));\
+    }\
+    catch (e) { print(e); }\
+\
+    try {\
+        for (var i in wasmInstanceExported) {\
+            try {\
+                print(eval('wasmInstanceExported.' + i + ';'));\
+            }\
+            catch (e) { print(e); }\
+            try {\
+                print(eval('wasmInstanceExported.' + i + '(0);'));\
+\
+            }\
+            catch (e) { print(e); }\
+        }\
+    }\
+    catch (e) { print(e); }\
+\
+\
+    var wasmModuleExports = WebAssembly.Module.exports(wasmModule);\
+    var varExports = [];\
+    print('[+] wasmModuleExported.')\
+    for (var i of wasmModuleExports) {\
+        print(i + ' : ' + i.kind + ' : ' + i.name);\
+        varExports.push(i.name);\
+    }\
+    for (var i of varExports) {\
+        try {\
+            print(eval('wasmInstanceExported.' + i + ';'));\
+        }\
+        catch (e) { print(e); }\
+        try {\
+            print(eval('wasmInstanceExported.' + i + '(0);'));\
+        }\
+        catch (e) { print(e); }\
+    }\
+}\
+catch (e) { print(e) };\
+//////////////////////////////////////////////////////////////IMPORTS\
+try {\
+    var wasmModuleImports = WebAssembly.Module.imports(wasmModule);\
+    var varImports = [];\
+    print('[+] wasmModuleImported.');\
+    for (var i of wasmModuleImports) {\
+        print(i + ' : ' + i.kind + ' : ' + i.name + ' : ' + i.module);\
+        varImports.push(i.name);\
+    }\
+    for(var scalar of varImports){\
+        print(scalar);\
+    }\
+}\
+catch (e) { print(e) };\
+\
+///////////////////////////////////////////////////////////////CUSTOM\
+try {\
+    var sections = WebAssembly.Module.customSections(wasmModule, 'custom');\
+    for(var i in sections){\
+        print(sections[i]);\
+    }\
+    sections = WebAssembly.Module.customSections(wasmModule, 'name');\
+    for(var i in sections){\
+        print(sections[i]);\
+    }\
+    sections = WebAssembly.Module.customSections(wasmModule, 'unknown');\
+    for(var i in sections){\
+        print(sections[i]);\
+    }\
+    sections = WebAssembly.Module.customSections(wasmModule, '');\
+    for(var i in sections){\
+        print(sections[i]);\
+    }\
+}\
+catch (e) { print(e); }\
+//////////////////////////////////////////////////////////////END\
+print('[+] End.');";
 
 u32 printFlag = 0;
 
@@ -2594,8 +2625,10 @@ static void write_to_testcase(void* mem, u32 len) {
   JavaScriptWebAssembly[strlen(JavaScriptWebAssembly)] = 0; 
  
   if(printFlag == 1){
+    //SAYF(cGRA "\n\n[GENERATED SAMPLE]\
+    //
     SAYF(cGRA "\n\n[GENERATED SAMPLE]\
-                   \n%s\n" cRST, JavaScriptWebAssembly);
+                   \n\n" cRST);
     printFlag = 0; 
     SAYF(TERM_CLEAR CURSOR_HIDE); 
   }
@@ -4118,7 +4151,7 @@ static void show_stats(void) {
 
   sprintf(tmp + banner_pad, "%s " cLCY VERSION cLGN
           " (%s)",  crash_mode ? cPIN "peruvian were-rabbit" : 
-          cYEL "american fuzzy lop", use_banner);
+          cYEL "afl-wasm by dwfault", use_banner);
 
   SAYF("\n%s\n\n", tmp);
 
